@@ -1,0 +1,209 @@
+---
+title: "Problem2: Tests of Return Predictability"
+author: "Limin Peng"
+date: "2023-02-08"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE,show_col_types = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r,echo=False,warning=FALSE}
+# import dataset
+setwd("C:\\Users\\admin\\OneDrive\\LSE\\FM437 Financial Econometrics\\P2[Tests of Predictability]")
+
+library(readr)
+# monthly FF Factors
+FF_m <- read_csv("F-F_Research_Data_Factors.csv",show_col_types = FALSE)
+
+# daily FF Factors
+FF_d <- read_csv("F-F_Research_Data_Factors_daily.csv",show_col_types = FALSE)
+
+# monthly size portfolios
+size_m <- read_csv("Portfolios_Formed_on_ME_Wout_Div.csv",show_col_types = FALSE)
+
+# daily size portfolios
+size_d <- read_csv("Portfolios_Formed_on_ME_daily.csv",show_col_types = FALSE)
+```
+
+## (a) CRSP Market Returns
+```{r}
+#  sample mean, standard deviation, autocorrelations up to lag 5, Box-Pierce Q-statistic with five autocorrelations
+get_stat<- function(ts){
+    T <- length(ts)
+    mean <- mean(ts)
+    sd <- (sum((ts-mean)^2)/(T-1))^0.5
+    auto_corr <- acf(ts,lag.max=5, plot=FALSE)$acf[1:6]
+    auto_corr_sq <- auto_corr^2
+    BP_Q = T*sum(auto_corr_sq[-1])
+    
+    ans <- list(mean, sd, auto_corr, BP_Q)
+    names(ans) <- c("mean","sd","auto_corr","BP_Q")
+    
+    return(ans)
+    }
+
+# market returns
+Rm_m = FF_m$`Mkt-RF` + FF_m$RF
+Rm_d = FF_d$`Mkt-RF` + FF_d$RF
+
+stat.Rm_m <- get_stat(Rm_m)
+stat.Rm_d <- get_stat(Rm_d)
+```
+
+```{r}
+# CRSP market returns, daily
+print(c("CRSP market returns, daily",stat.Rm_d))
+```
+
+```{r}
+# CRSP market returns, monthly
+print(c("CRSP market returns, monthly",stat.Rm_m))
+```
+
+## (b) 5 Size Portfolios
+```{r}
+# 5 size portfolios, daily
+stat.size_d.Lo20 <- get_stat(size_d$`Lo 20`)
+stat.size_d.Qnt2 <- get_stat(size_d$`Qnt 2`)
+stat.size_d.Qnt3 <- get_stat(size_d$`Qnt 3`)
+stat.size_d.Qnt4 <- get_stat(size_d$`Qnt 4`)
+stat.size_d.Hi20 <- get_stat(size_d$`Hi 20`)
+
+ls1 <- list(stat.size_d.Lo20,stat.size_d.Qnt2,stat.size_d.Qnt3,stat.size_d.Qnt4,stat.size_d.Hi20)
+names(ls1) <- c("Lo 20","Qnt 2","Qnt 3","Qnt 4","Hi 20")
+print(ls1)
+```
+
+```{r}
+# 5 size portfolios, monthly
+stat.size_m.Lo20 <- get_stat(size_m$`Lo 20`)
+stat.size_m.Qnt2 <- get_stat(size_m$`Qnt 2`)
+stat.size_m.Qnt3 <- get_stat(size_m$`Qnt 3`)
+stat.size_m.Qnt4 <- get_stat(size_m$`Qnt 4`)
+stat.size_m.Hi20 <- get_stat(size_m$`Hi 20`)
+
+ls2 <- list(stat.size_m.Lo20,stat.size_m.Qnt2,stat.size_m.Qnt3,stat.size_m.Qnt4,stat.size_m.Hi20)
+names(ls2) <- c("Lo 20","Qnt 2","Qnt 3","Qnt 4","Hi 20")
+print(ls2)
+```
+
+## (c) Subsample Results
+```{r}
+# split sample period
+T_d = 12700 # half num. of daily  obs. 
+T_m = 579 # half num. of monthly  obs. 
+Rm_d1 <- Rm_d[1:T_d]
+Rm_d2 <- Rm_d[-1:-T_d]
+Rm_m1 <- Rm_m[1:T_m]
+Rm_m2 <- Rm_m[-1:-T_m]
+
+size_d1 <- size_d[1:T_d,]
+size_d2 <- size_d[-1:-T_d,]
+size_m1 <- size_d[1:T_m,]
+size_m2 <- size_d[-1:-T_m,]
+
+stat.Rm_d1 <- get_stat(Rm_d1)
+stat.Rm_d2 <- get_stat(Rm_d2)
+stat.Rm_m1 <- get_stat(Rm_m1)
+stat.Rm_m2 <- get_stat(Rm_m2)
+```
+### Market Returns
+#### Daily
+```{r}
+print(c("CRSP market returns subsample 1, daily",stat.Rm_d1))
+```
+```{r}
+print(c("CRSP market returns subsample 2, daily",stat.Rm_d2))
+```
+#### Monthly
+```{r}
+print(c("CRSP market returns subsample 1, monthly",stat.Rm_m1))
+```
+```{r}
+print(c("CRSP market returns subsample 2, monthly",stat.Rm_m2))
+```
+
+### Size Portfolio Returns
+#### Daily
+```{r}
+# subsample 1
+stat.size_d1.Lo20 <- get_stat(size_d1$`Lo 20`)
+stat.size_d1.Qnt2 <- get_stat(size_d1$`Qnt 2`)
+stat.size_d1.Qnt3 <- get_stat(size_d1$`Qnt 3`)
+stat.size_d1.Qnt4 <- get_stat(size_d1$`Qnt 4`)
+stat.size_d1.Hi20 <- get_stat(size_d1$`Hi 20`)
+
+ls1.1 <- list(stat.size_d1.Lo20,stat.size_d1.Qnt2,stat.size_d1.Qnt3,stat.size_d1.Qnt4,stat.size_d1.Hi20)
+names(ls1.1) <- c("Lo 20","Qnt 2","Qnt 3","Qnt 4","Hi 20")
+print(ls1.1)
+```
+```{r}
+# subsample 2
+stat.size_d2.Lo20 <- get_stat(size_d2$`Lo 20`)
+stat.size_d2.Qnt2 <- get_stat(size_d2$`Qnt 2`)
+stat.size_d2.Qnt3 <- get_stat(size_d2$`Qnt 3`)
+stat.size_d2.Qnt4 <- get_stat(size_d2$`Qnt 4`)
+stat.size_d2.Hi20 <- get_stat(size_d2$`Hi 20`)
+
+ls1.2 <- list(stat.size_d2.Lo20,stat.size_d2.Qnt2,stat.size_d2.Qnt3,stat.size_d2.Qnt4,stat.size_d2.Hi20)
+names(ls1.2) <- c("Lo 20","Qnt 2","Qnt 3","Qnt 4","Hi 20")
+print(ls1.2)
+```
+#### Monthly
+```{r}
+# subsample 1
+stat.size_m1.Lo20 <- get_stat(size_m1$`Lo 20`)
+stat.size_m1.Qnt2 <- get_stat(size_m1$`Qnt 2`)
+stat.size_m1.Qnt3 <- get_stat(size_m1$`Qnt 3`)
+stat.size_m1.Qnt4 <- get_stat(size_m1$`Qnt 4`)
+stat.size_m1.Hi20 <- get_stat(size_m1$`Hi 20`)
+
+ls2.1 <- list(stat.size_m1.Lo20,stat.size_m1.Qnt2,stat.size_m1.Qnt3,stat.size_m1.Qnt4,stat.size_m1.Hi20)
+names(ls2.1) <- c("Lo 20","Qnt 2","Qnt 3","Qnt 4","Hi 20")
+print(ls2.1)
+```
+```{r}
+# subsample 2
+stat.size_m2.Lo20 <- get_stat(size_m2$`Lo 20`)
+stat.size_m2.Qnt2 <- get_stat(size_m2$`Qnt 2`)
+stat.size_m2.Qnt3 <- get_stat(size_m2$`Qnt 3`)
+stat.size_m2.Qnt4 <- get_stat(size_m2$`Qnt 4`)
+stat.size_m2.Hi20 <- get_stat(size_m2$`Hi 20`)
+
+ls2.2 <- list(stat.size_m2.Lo20,stat.size_m2.Qnt2,stat.size_m2.Qnt3,stat.size_m2.Qnt4,stat.size_m2.Hi20)
+names(ls2.2) <- c("Lo 20","Qnt 2","Qnt 3","Qnt 4","Hi 20")
+print(ls2.2)
+```
+### Summary
+#### Sampling Frequency
+
+```{r}
+freq <- c(rep(c("daily"),6),rep(c("monthly"),6))
+portfolio <- rep(c("Rm", "Qnt 1","Qnt 2","Qnt 3","Qnt 4","Qnt 5"),2)
+auto_corr_L1 <- c(stat.Rm_d$auto_corr[2],stat.size_d.Lo20$auto_corr[2],stat.size_d.Qnt2$auto_corr[2],stat.size_d.Qnt3$auto_corr[2],stat.size_d.Qnt4$auto_corr[2],stat.size_d.Hi20$auto_corr[2],stat.Rm_m$auto_corr[2],stat.size_m.Lo20$auto_corr[2],stat.size_m.Qnt2$auto_corr[2],stat.size_m.Qnt3$auto_corr[2],stat.size_m.Qnt4$auto_corr[2],stat.size_m.Hi20$auto_corr[2])
+res <- data.frame(freq=freq,portfolio=portfolio,auto_corr_L1=auto_corr_L1)
+ggplot(res, aes(x=portfolio, y=auto_corr_L1, fill=freq))+geom_col()
+```
+The above plot shows the $1^{st}$ order correlation of size portfolios and market returns of daily and monthly frequency. The daily returns are more predictable than the monthly ones, having higher first-order correlation coefficients.
+
+#### Subsample
+```{r}
+sample <- freq <- c(rep(c("1"),6),rep(c("2"),6))
+auto_corr_L1.2 <- c(stat.Rm_d1$auto_corr[2],stat.size_d1.Lo20$auto_corr[2],stat.size_d1.Qnt2$auto_corr[2],stat.size_d1.Qnt3$auto_corr[2],stat.size_d1.Qnt4$auto_corr[2],stat.size_d1.Hi20$auto_corr[2],stat.Rm_d2$auto_corr[2],stat.size_d2.Lo20$auto_corr[2],stat.size_d2.Qnt2$auto_corr[2],stat.size_d2.Qnt3$auto_corr[2],stat.size_d2.Qnt4$auto_corr[2],stat.size_d2.Hi20$auto_corr[2])
+res2 <- data.frame(sample=sample,portfolio=portfolio,auto_corr_L1=auto_corr_L1.2)
+ggplot(res2, aes(x=portfolio, y=auto_corr_L1, fill=sample))+geom_col()
+
+```
+The above plot shows the 1st order correlation of size portfolios and market returns at the daily frequency of the two sub-samples. In the second sample, autocorrelation significantly drops across all portfolios.
+
+Moreover, the effect of size becomes ambiguous in the second sample.
+
+#### The effect of size
+As shown in previous plots, the effect of size plays a significant role in return predictability. Predictability decreases as market caps go up. This is true for different sampling frequencies. However, in the second half of the sample, the size effect becomes much less pronounced than the previous period.
+
+
